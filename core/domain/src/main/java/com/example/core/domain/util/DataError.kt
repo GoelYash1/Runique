@@ -1,7 +1,7 @@
 package com.example.core.domain.util
 
 sealed interface DataError: Error {
-    enum class Network: DataError{
+    enum class Network: DataError {
         REQUEST_TIMEOUT,
         UNAUTHORIZED,
         CONFLICT,
