@@ -12,39 +12,39 @@ dependencies{
     compileOnly(libs.room.gradle.plugin)
 }
 
-gradlePlugin{
-    plugins{
-        register("androidApplication"){
-            id="runique.android.application"
-            implementationClass="AndroidApplicationConventionPlugin"
+gradlePlugin {
+    plugins {
+        register("androidApplication") {
+            id = "runique.android.application"
+            implementationClass = "AndroidApplicationConventionPlugin"
         }
-        register("androidApplicationCompose"){
-            id="runique.android.application.compose"
-            implementationClass="AndroidApplicationComposeConventionPlugin"
+        register("androidApplicationCompose") {
+            id = "runique.android.application.compose"
+            implementationClass = "AndroidApplicationComposeConventionPlugin"
         }
-        register("androidLibrary"){
-            id="runique.android.library"
-            implementationClass="AndroidLibraryConventionPlugin"
+        register("androidLibrary") {
+            id = "runique.android.library"
+            implementationClass = "AndroidLibraryConventionPlugin"
         }
-        register("androidLibraryCompose"){
-            id="runique.android.library.compose"
-            implementationClass="AndroidLibraryComposeConventionPlugin"
+        register("androidLibraryCompose") {
+            id = "runique.android.library.compose"
+            implementationClass = "AndroidLibraryComposeConventionPlugin"
         }
-        register("androidFeatureUi"){
-            id="runique.android.feature.ui"
-            implementationClass="AndroidFeatureUiConventionPlugin"
+        register("androidFeatureUi") {
+            id = "runique.android.feature.ui"
+            implementationClass = "AndroidFeatureUiConventionPlugin"
         }
-        register("androidRoom"){
-            id="runique.android.room"
-            implementationClass="AndroidRoomConventionPlugin"
+        register("androidRoom") {
+            id = "runique.android.room"
+            implementationClass = "AndroidRoomConventionPlugin"
         }
-        register("jvmLibrary"){
-            id="runique.jvm.library"
-            implementationClass="JvmLibraryConventionPlugin"
+        register("jvmLibrary") {
+            id = "runique.jvm.library"
+            implementationClass = "JvmLibraryConventionPlugin"
         }
-        register("jvmKtor"){
-            id="runique.jvm.ktor"
-            implementationClass="JvmKtorConventionPlugin"
+        register("jvmKtor") {
+            id = "runique.jvm.ktor"
+            implementationClass = "JvmKtorConventionPlugin"
         }
     }
 }
