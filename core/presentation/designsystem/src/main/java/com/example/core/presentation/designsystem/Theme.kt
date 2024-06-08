@@ -21,10 +21,10 @@ val DarkColorScheme = darkColorScheme(
     onPrimary = RuniqueBlack,
     onBackground = RuniqueWhite,
     onSurface = RuniqueWhite,
-    onSurfaceVariant = RuniqueGray
+    onSurfaceVariant = RuniqueGray,
+    error = RuniqueDarkRed
 )
 
-@RequiresApi(Build.VERSION_CODES.CUPCAKE)
 @Composable
 fun RuniqueTheme(
     content: @Composable () -> Unit
