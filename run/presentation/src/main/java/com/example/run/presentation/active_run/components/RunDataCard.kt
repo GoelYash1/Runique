@@ -32,9 +32,9 @@ import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun RunDataCard(
-    modifier: Modifier = Modifier,
+    elapsedTime: Duration,
     runData: RunData,
-    elapsedTime: Duration
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -50,13 +50,14 @@ fun RunDataCard(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             RunDataItem(
                 title = stringResource(id = R.string.distance),
-                value = (runData.distanceMeters/1000.0).toFormattedKm(),
+                value = (runData.distanceMeters / 1000.0).toFormattedKm(),
                 modifier = Modifier
                     .defaultMinSize(minWidth = 75.dp)
             )
@@ -71,13 +72,14 @@ fun RunDataCard(
         }
     }
 }
+
 @Composable
 private fun RunDataItem(
-    title:String,
-    value:String,
+    title: String,
+    value: String,
     modifier: Modifier = Modifier,
     valueFontSize: TextUnit = 16.sp
-){
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -100,12 +102,11 @@ private fun RunDataItem(
 private fun RunDataCardPreview() {
     RuniqueTheme {
         RunDataCard(
+            elapsedTime = 10.minutes,
             runData = RunData(
                 distanceMeters = 3425,
                 pace = 3.minutes
-            ), 
-            elapsedTime = 10.minutes 
+            )
         )
     }
-    
 }

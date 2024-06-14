@@ -27,7 +27,7 @@ class RunningTracker(
     private val applicationScope: CoroutineScope
 ) {
     private val _runData = MutableStateFlow(RunData())
-    val runDate = _runData.asStateFlow()
+    val runData = _runData.asStateFlow()
 
     private val isTracking = MutableStateFlow(false)
     private val isObservingLocation = MutableStateFlow(false)
@@ -36,62 +36,61 @@ class RunningTracker(
     val elapsedTime = _elapsedTime.asStateFlow()
 
     val currentLocation = isObservingLocation
-        .flatMapLatest {isObservingLocation->
-            if(isObservingLocation){
+        .flatMapLatest { isObservingLocation ->
+            if(isObservingLocation) {
                 locationObserver.observeLocation(1000L)
-            }else flowOf()
+            } else flowOf()
         }
         .stateIn(
             applicationScope,
             SharingStarted.Lazily,
             null
         )
+
     init {
         isTracking
-            .flatMapLatest { isTracking->
-                if(isTracking){
+            .flatMapLatest { isTracking ->
+                if(isTracking) {
                     Timer.timeAndEmit()
                 } else flowOf()
             }
             .onEach {
-                _elapsedTime.value+=it
+                _elapsedTime.value += it
             }
             .launchIn(applicationScope)
 
         currentLocation
             .filterNotNull()
-            .combineTransform(isTracking){location,isTracking->
-                if(isTracking){
+            .combineTransform(isTracking) { location, isTracking ->
+                if(isTracking) {
                     emit(location)
                 }
             }
-            .zip(_elapsedTime){location,elapsedTime->
+            .zip(_elapsedTime) { location, elapsedTime ->
                 LocationTimestamp(
                     location = location,
                     durationTimestamp = elapsedTime
                 )
             }
-            .onEach {location->
-                val currentLocations = runDate.value.locations
-                val lastLocationList = if(currentLocations.isNotEmpty()){
+            .onEach { location ->
+                val currentLocations = runData.value.locations
+                val lastLocationsList = if(currentLocations.isNotEmpty()) {
                     currentLocations.last() + location
-                }else{
-                    listOf(location)
-                }
-
-                val newLocationsList = currentLocations.replaceLast(lastLocationList)
+                } else listOf(location)
+                val newLocationsList = currentLocations.replaceLast(lastLocationsList)
 
                 val distanceMeters = LocationDataCalculator.getTotalDistanceMeters(
                     locations = newLocationsList
                 )
-                val distanceKm = distanceMeters/1000.0
+                val distanceKm = distanceMeters / 1000.0
                 val currentDuration = location.durationTimestamp
 
-                val avgSecondsPerKm = if (distanceKm == 0.0){
+                val avgSecondsPerKm = if(distanceKm == 0.0) {
                     0
-                }else{
-                    (currentDuration.inWholeSeconds/distanceKm).roundToInt()
+                } else {
+                    (currentDuration.inWholeSeconds / distanceKm).roundToInt()
                 }
+
                 _runData.update {
                     RunData(
                         distanceMeters = distanceMeters,
@@ -103,22 +102,22 @@ class RunningTracker(
             .launchIn(applicationScope)
     }
 
-    fun setIsTracking(isTracking: Boolean){
+    fun setIsTracking(isTracking: Boolean) {
         this.isTracking.value = isTracking
     }
 
-    fun startObservingLocation(){
+    fun startObservingLocation() {
         isObservingLocation.value = true
     }
 
-    fun stopObservingLocation(){
+    fun stopObservingLocation() {
         isObservingLocation.value = false
     }
 }
 
-private fun <T> List<List<T>>.replaceLast(replacement: List<T>): List<List<T>>{
-    if (this.isEmpty()){
+private fun <T> List<List<T>>.replaceLast(replacement: List<T>): List<List<T>> {
+    if(this.isEmpty()) {
         return listOf(replacement)
     }
-    return this.dropLast(1)+ listOf(replacement)
+    return this.dropLast(1) + listOf(replacement)
 }

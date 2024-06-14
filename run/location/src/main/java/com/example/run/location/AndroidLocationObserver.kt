@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.callbackFlow
 class AndroidLocationObserver(
     private val context: Context
 ): LocationObserver {
+
     private val client = LocationServices.getFusedLocationProviderClient(context)
 
     override fun observeLocation(interval: Long): Flow<LocationWithAltitude> {
@@ -29,10 +30,11 @@ class AndroidLocationObserver(
             val locationManager = context.getSystemService<LocationManager>()!!
             var isGpsEnabled = false
             var isNetworkEnabled = false
-            while (!isGpsEnabled && !isNetworkEnabled){
+            while(!isGpsEnabled && !isNetworkEnabled) {
                 isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-                if(!isGpsEnabled && !isNetworkEnabled){
+
+                if(!isGpsEnabled && !isNetworkEnabled) {
                     delay(3000L)
                 }
             }
@@ -46,9 +48,9 @@ class AndroidLocationObserver(
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 close()
-            }else{
+            } else {
                 client.lastLocation.addOnSuccessListener {
-                    it?.let {location->
+                    it?.let { location ->
                         trySend(location.toLocationWithAltitude())
                     }
                 }
@@ -56,18 +58,18 @@ class AndroidLocationObserver(
                 val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, interval)
                     .build()
 
-                val locationCallback = object : LocationCallback(){
+                val locationCallback = object : LocationCallback() {
                     override fun onLocationResult(result: LocationResult) {
                         super.onLocationResult(result)
-                        result.locations.lastOrNull()?.let {location ->
+                        result.locations.lastOrNull()?.let { location ->
                             trySend(location.toLocationWithAltitude())
                         }
                     }
                 }
 
-                client.requestLocationUpdates(request,locationCallback, Looper.getMainLooper())
+                client.requestLocationUpdates(request, locationCallback, Looper.getMainLooper())
 
-                awaitClose{
+                awaitClose {
                     client.removeLocationUpdates(locationCallback)
                 }
             }

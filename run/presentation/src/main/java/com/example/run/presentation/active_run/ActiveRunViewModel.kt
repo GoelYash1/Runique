@@ -20,6 +20,7 @@ import timber.log.Timber
 class ActiveRunViewModel(
     private val runningTracker: RunningTracker
 ): ViewModel() {
+
     var state by mutableStateOf(ActiveRunState())
         private set
 
@@ -33,23 +34,23 @@ class ActiveRunViewModel(
     private val isTracking = combine(
         shouldTrack,
         hasLocationPermission
-    ){ shouldTrack,hasPermission->
+    ) { shouldTrack, hasPermission ->
         shouldTrack && hasPermission
-    }.stateIn(viewModelScope, SharingStarted.Lazily,false)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     init {
         hasLocationPermission
-            .onEach {hasPermission->
-                if (hasPermission){
+            .onEach { hasPermission ->
+                if(hasPermission) {
                     runningTracker.startObservingLocation()
-                }else{
+                } else {
                     runningTracker.stopObservingLocation()
                 }
             }
             .launchIn(viewModelScope)
 
         isTracking
-            .onEach { isTracking->
+            .onEach { isTracking ->
                 runningTracker.setIsTracking(isTracking)
             }
             .launchIn(viewModelScope)
@@ -57,17 +58,16 @@ class ActiveRunViewModel(
         runningTracker
             .currentLocation
             .onEach {
-                state = state.copy(
-                    currentLocation = it?.location
-                )
+                state = state.copy(currentLocation = it?.location)
             }
             .launchIn(viewModelScope)
 
         runningTracker
-            .runDate
+            .runData
             .onEach {
                 state = state.copy(runData = it)
             }
+            .launchIn(viewModelScope)
 
         runningTracker
             .elapsedTime
@@ -76,14 +76,14 @@ class ActiveRunViewModel(
             }
             .launchIn(viewModelScope)
     }
-    fun onAction(action: ActiveRunAction){
-        when(action){
+
+    fun onAction(action: ActiveRunAction) {
+        when(action) {
             ActiveRunAction.OnFinishRunClick -> {
+
             }
             ActiveRunAction.OnResumeRunClick -> {
-                state = state.copy(
-                    shouldTrack = true
-                )
+                state = state.copy(shouldTrack = true)
             }
             ActiveRunAction.OnBackClick -> {
                 state = state.copy(shouldTrack = false)
@@ -105,14 +105,13 @@ class ActiveRunViewModel(
                     showNotificationPermissionRationale = action.showNotificationPermissionRationale
                 )
             }
-
-            ActiveRunAction.DismissRationaleDialog -> {
+            is ActiveRunAction.DismissRationaleDialog -> {
                 state = state.copy(
-                    showLocationPermissionRationale = false,
-                    showNotificationPermissionRationale = false
+                    showNotificationPermissionRationale = false,
+                    showLocationPermissionRationale = false
                 )
             }
-
+            else -> Unit
         }
     }
 }
