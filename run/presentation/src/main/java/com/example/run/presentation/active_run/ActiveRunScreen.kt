@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3Api::class
-)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.example.run.presentation.active_run
 
@@ -37,6 +35,7 @@ import com.example.core.presentation.designsystem.components.RuniqueToolbar
 import com.example.run.presentation.R
 import com.example.run.presentation.active_run.components.RunDataCard
 import com.example.run.presentation.active_run.maps.TrackerMap
+import com.example.run.presentation.active_run.service.ActiveRunService
 import com.example.run.presentation.util.hasLocationPermission
 import com.example.run.presentation.util.hasNotificationPermission
 import com.example.run.presentation.util.shouldShowLocationPermissionRationale
@@ -45,10 +44,12 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ActiveRunScreenRoot(
-    viewModel: ActiveRunViewModel = koinViewModel()
+    onServiceToggle: (isServiceRunning: Boolean) -> Unit,
+    viewModel: ActiveRunViewModel = koinViewModel(),
 ) {
     ActiveRunScreen(
         state = viewModel.state,
+        onServiceToggle = onServiceToggle,
         onAction = viewModel::onAction
     )
 }
@@ -56,15 +57,16 @@ fun ActiveRunScreenRoot(
 @Composable
 private fun ActiveRunScreen(
     state: ActiveRunState,
+    onServiceToggle: (isServiceRunning: Boolean) -> Unit,
     onAction: (ActiveRunAction) -> Unit
 ) {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) {perms->
+    ) { perms ->
         val hasCourseLocationPermission = perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         val hasFineLocationPermission = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        val hasNotificationPermission = if(Build.VERSION.SDK_INT >= 33){
+        val hasNotificationPermission = if (Build.VERSION.SDK_INT >= 33) {
             perms[Manifest.permission.POST_NOTIFICATIONS] == true
         } else true
 
@@ -75,14 +77,13 @@ private fun ActiveRunScreen(
         onAction(
             ActiveRunAction.SubmitLocationPermissionInfo(
                 acceptedLocationPermission = hasCourseLocationPermission && hasFineLocationPermission,
-                showLocationPermissionRationale =  showLocationRationale
+                showLocationPermissionRationale = showLocationRationale
             )
         )
-
         onAction(
             ActiveRunAction.SubmitNotificationPermissionInfo(
                 acceptedNotificationPermission = hasNotificationPermission,
-                showNotificationPermissionRationale =   showNotificationRationale
+                showNotificationPermissionRationale = showNotificationRationale
             )
         )
     }
@@ -95,19 +96,30 @@ private fun ActiveRunScreen(
         onAction(
             ActiveRunAction.SubmitLocationPermissionInfo(
                 acceptedLocationPermission = context.hasLocationPermission(),
-                showLocationPermissionRationale =  showLocationRationale
+                showLocationPermissionRationale = showLocationRationale
             )
         )
-
         onAction(
             ActiveRunAction.SubmitNotificationPermissionInfo(
                 acceptedNotificationPermission = context.hasNotificationPermission(),
-                showNotificationPermissionRationale =   showNotificationRationale
+                showNotificationPermissionRationale = showNotificationRationale
             )
         )
 
-        if(!showLocationRationale && !showNotificationRationale) {
+        if (!showLocationRationale && !showNotificationRationale) {
             permissionLauncher.requestRuniquePermissions(context)
+        }
+    }
+
+    LaunchedEffect(key1 = state.isRunFinished) {
+        if(state.isRunFinished) {
+            onServiceToggle(false)
+        }
+    }
+
+    LaunchedEffect(key1 = state.shouldTrack) {
+        if(context.hasLocationPermission() && state.shouldTrack && !ActiveRunService.isServiceActive) {
+            onServiceToggle(true)
         }
     }
 
@@ -119,33 +131,33 @@ private fun ActiveRunScreen(
                 title = stringResource(id = R.string.active_run),
                 onBackClick = {
                     onAction(ActiveRunAction.OnBackClick)
-                }
+                },
             )
         },
         floatingActionButton = {
             RuniqueFloatingActionButton(
                 icon = if (state.shouldTrack) {
                     StopIcon
-                } else{
-                      StartIcon
+                } else {
+                    StartIcon
                 },
                 onClick = {
                     onAction(ActiveRunAction.OnToggleRunClick)
                 },
                 iconSize = 20.dp,
-                contentDescription = if(state.shouldTrack){
+                contentDescription = if (state.shouldTrack) {
                     stringResource(id = R.string.pause_run)
-                }else{
+                } else {
                     stringResource(id = R.string.start_run)
                 }
             )
         }
-    ) {padding->
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
-        ){
+        ) {
             TrackerMap(
                 isRunFinished = state.isRunFinished,
                 currentLocation = state.currentLocation,
@@ -155,8 +167,8 @@ private fun ActiveRunScreen(
                     .fillMaxSize()
             )
             RunDataCard(
-                runData = state.runData,
                 elapsedTime = state.elapsedTime,
+                runData = state.runData,
                 modifier = Modifier
                     .padding(16.dp)
                     .padding(padding)
@@ -165,7 +177,7 @@ private fun ActiveRunScreen(
         }
     }
 
-    if(!state.shouldTrack && state.hasStartedRunning){
+    if (!state.shouldTrack && state.hasStartedRunning) {
         RuniqueDialog(
             title = stringResource(id = R.string.running_is_paused),
             onDismiss = {
@@ -174,7 +186,7 @@ private fun ActiveRunScreen(
             description = stringResource(id = R.string.resume_or_finish_run),
             primaryButton = {
                 RuniqueActionButton(
-                    text = stringResource(id = R.string.resume) ,
+                    text = stringResource(id = R.string.resume),
                     isLoading = false,
                     onClick = {
                         onAction(ActiveRunAction.OnResumeRunClick)
@@ -203,9 +215,11 @@ private fun ActiveRunScreen(
                 state.showLocationPermissionRationale && state.showNotificationPermissionRationale -> {
                     stringResource(id = R.string.location_notification_rationale)
                 }
+
                 state.showLocationPermissionRationale -> {
                     stringResource(id = R.string.location_rationale)
                 }
+
                 else -> {
                     stringResource(id = R.string.notification_rationale)
                 }
@@ -217,7 +231,7 @@ private fun ActiveRunScreen(
                     onClick = {
                         onAction(ActiveRunAction.DismissRationaleDialog)
                         permissionLauncher.requestRuniquePermissions(context)
-                    }
+                    },
                 )
             }
         )
@@ -226,25 +240,23 @@ private fun ActiveRunScreen(
 
 private fun ActivityResultLauncher<Array<String>>.requestRuniquePermissions(
     context: Context
-){
+) {
     val hasLocationPermission = context.hasLocationPermission()
     val hasNotificationPermission = context.hasNotificationPermission()
 
     val locationPermissions = arrayOf(
+        Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
     )
-
-    val notificationPermission = if(Build.VERSION.SDK_INT >=33){
-        arrayOf(
-            Manifest.permission.POST_NOTIFICATIONS
-        )
+    val notificationPermission = if (Build.VERSION.SDK_INT >= 33) {
+        arrayOf(Manifest.permission.POST_NOTIFICATIONS)
     } else arrayOf()
 
-    when{
-        !hasLocationPermission && !hasNotificationPermission ->{
+    when {
+        !hasLocationPermission && !hasNotificationPermission -> {
             launch(locationPermissions + notificationPermission)
         }
+
         !hasLocationPermission -> launch(locationPermissions)
         !hasNotificationPermission -> launch(notificationPermission)
     }
@@ -256,6 +268,7 @@ private fun ActiveRunScreenPreview() {
     RuniqueTheme {
         ActiveRunScreen(
             state = ActiveRunState(),
+            onServiceToggle = {},
             onAction = {}
         )
     }
