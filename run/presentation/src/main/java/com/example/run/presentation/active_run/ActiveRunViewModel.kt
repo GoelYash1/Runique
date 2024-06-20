@@ -152,6 +152,7 @@ class ActiveRunViewModel(
             // Save run in repository
 
             runningTracker.finishRun()
+            state = state.copy(isSavingRun = false)
         }
     }
 
