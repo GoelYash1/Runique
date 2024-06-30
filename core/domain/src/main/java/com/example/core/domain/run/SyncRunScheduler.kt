@@ -5,7 +5,7 @@ import kotlin.time.Duration
 
 interface SyncRunScheduler {
     suspend fun scheduleSync(type: SyncType)
-    suspend fun cancelAllSync()
+    suspend fun cancelAllSyncs()
     sealed interface SyncType {
         data class FetchRuns(val interval: Duration): SyncType
         data class DeleteRun(val runId: RunId): SyncType
